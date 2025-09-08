@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CARELYTICS – Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+    body { background:#f4f9ff; padding:20px; }
+    h1 { text-align:center; margin-bottom:20px; color:#067bc2; }
+
+    .form-card {
+      max-width:600px; margin:0 auto; background:white; padding:20px;
+      border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    }
+    .form-card h2 { margin-bottom:15px; color:#333; }
+    .form-card input, .form-card select {
+      width:100%; padding:12px; margin:8px 0; border:1px solid #ccc;
+      border-radius:8px; font-size:15px;
+    }
+    .btn {
+      display:inline-block; padding:12px 18px; margin:8px 5px;
+      font-size:16px; border:none; border-radius:8px; cursor:pointer;
+      transition:0.3s; font-weight:600;
+    }
+    .btn-save { background:#28a745; color:white; }
+    .btn-save:hover { background:#218838; }
+    .btn-compare { background:#ff9800; color:white; }
+    .btn-compare:hover { background:#e68900; }
+    .btn-report { background:#067bc2; color:white; }
+    .btn-report:hover { background:#055a92; }
+    .btn-chatbot { background:#9c27b0; color:white; }
+    .btn-chatbot:hover { background:#7b1fa2; }
+
+    .records {
+      max-width:600px; margin:30px auto; background:white;
+      padding:20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    }
+    .records h2 { margin-bottom:10px; }
+    .record-item { padding:10px; border-bottom:1px solid #eee; }
+    .record-item:last-child { border-bottom:none; }
+    .timestamp { font-size:12px; color:#777; }
+  </style>
+</head>
+<body>
+<script>
+  // 🔐 Block access if not logged in
+  if(!localStorage.getItem("loggedInUser")){
+    window.location.href = "login.html";
+  }
+</script>
+
+  <h1>👋 Welcome to CARELYTICS</h1>
+
+  <!-- Health Entry Form -->
+  <div class="form-card">
+    <h2>📝 Enter Your Health Details</h2>
+    <input type="number" id="bp" placeholder="Blood Pressure (e.g. 120)">
+    <input type="number" id="sugar" placeholder="Sugar Level (mg/dL)">
+    <input type="number" id="weight" placeholder="Weight (kg)">
+    <input type="text" id="condition" placeholder="Other Condition (e.g. Thyroid, High BP)">
+    <input type="number" id="sleep" placeholder="Sleep Hours">
+    <select id="activity">
+      <option value="">Select Physical Activity</option>
+      <option value="Sedentary">Sedentary</option>
+      <option value="Light">Light</option>
+      <option value="Moderate">Moderate</option>
+      <option value="Active">Active</option>
+    </select>
+    <select id="diet">
+      <option value="">Select Diet Preference</option>
+      <option value="Vegetarian">Vegetarian</option>
+      <option value="Non-Vegetarian">Non-Vegetarian</option>
+      <option value="Vegan">Vegan</option>
+      <option value="Keto">Keto</option>
+    </select>
+    <select id="goal">
+      <option value="">Select Fitness Goal</option>
+      <option value="Lose Weight">Lose Weight</option>
+      <option value="Build Muscle">Build Muscle</option>
+      <option value="Maintain Health">Maintain Health</option>
+    </select>
+
+    <button class="btn btn-save" onclick="saveRecord()">💾 Save Entry</button>
+    <button class="btn btn-compare" onclick="window.location.href='compare.html'">📊 Compare</button>
+    <button class="btn btn-report" onclick="window.location.href='report.html'">📈 Report</button>
+    <button class="btn btn-chatbot" onclick="window.location.href='chatbot.html'">🤖 Chatbot</button>
+  </div>
+
+  <!-- Saved Records -->
+  <div class="records" id="records">
+    <h2>📂 Saved Records</h2>
+    <div id="recordsList"></div>
+  </div>
+
+<script>
+function saveRecord(){
+  const bp = document.getElementById("bp").value;
+  const sugar = document.getElementById("sugar").value;
+  const weight = document.getElementById("weight").value;
+  const condition = document.getElementById("condition").value;
+  const sleep = document.getElementById("sleep").value;
+  const activity = document.getElementById("activity").value;
+  const diet = document.getElementById("diet").value;
+  const goal = document.getElementById("goal").value;
+
+  if(!bp && !sugar && !weight && !condition && !sleep && !activity && !diet && !goal){
+    alert("⚠️ Please enter at least one detail");
+    return;
+  }
+
+  const newRecord = {
+    bp, sugar, weight, condition, sleep, activity, diet, goal,
+    timestamp: new Date().toLocaleString()
+  };
+
+  let records = JSON.parse(localStorage.getItem("healthRecords")) || [];
+  records.push(newRecord);
+  localStorage.setItem("healthRecords", JSON.stringify(records));
+  
+  alert("✅ Entry Saved Successfully!");
+  loadRecords();
+}
+
+function loadRecords(){
+  let records = JSON.parse(localStorage.getItem("healthRecords")) || [];
+  let list = document.getElementById("recordsList");
+  list.innerHTML = "";
+  records.forEach(r => {
+    let div = document.createElement("div");
+    div.className = "record-item";
+    div.innerHTML = `
+      <b>BP:</b> ${r.bp || "—"} |
+      <b>Sugar:</b> ${r.sugar || "—"} |
+      <b>Weight:</b> ${r.weight || "—"} kg |
+      <b>Condition:</b> ${r.condition || "—"} |
+      <b>Sleep:</b> ${r.sleep || "—"} hrs |
+      <b>Activity:</b> ${r.activity || "—"} |
+      <b>Diet:</b> ${r.diet || "—"} |
+      <b>Goal:</b> ${r.goal || "—"} 
+      <div class="timestamp">⏰ ${r.timestamp}</div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+window.onload = loadRecords;
+</script>
+</body>
+</html>

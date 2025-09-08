@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CARELYTICS – Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+    body { opacity:0; transition:opacity 0.6s ease; min-height:100vh; position:relative; }
+    body.fade-in { opacity:1; }
+    body::before {
+      content:""; position:fixed; top:0; left:0; width:100%; height:100%;
+      background:url("image.jpg") center/cover no-repeat;
+      filter:blur(4px) brightness(0.7); z-index:-2;
+    }
+    body::after {
+      content:""; position:fixed; top:0; left:0; width:100%; height:100%;
+      background:linear-gradient(to right,rgba(253,243,240,0.6),rgba(229,244,253,0.6));
+      z-index:-1;
+    }
+    .navbar {
+      position:fixed; top:0; left:0; width:100%;
+      background:rgba(255,255,255,0.8); backdrop-filter:blur(5px);
+      padding:15px 10%; display:flex; justify-content:space-between; align-items:center;
+      box-shadow:0 2px 10px rgba(0,0,0,0.05); z-index:1000;
+    }
+    .logo { font-size:22px; font-weight:700; color:#4cd02b; }
+    .nav-links a { margin-left:20px; text-decoration:none; color:#250779; font-weight:500; cursor:pointer; }
+    .hero { padding:120px 10% 80px; text-align:center; }
+    .hero h1 { font-size:42px; margin-bottom:15px; color:#3d3d9c; }
+    .hero p { font-size:18px; margin-bottom:10px; color:#1c2d9d; }
+    .modal {
+      display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(14, 41, 130, 0.5); z-index:1001;
+    }
+    .modal-content {
+      background:rgb(85, 230, 241); margin:80px auto; padding:40px; border-radius:10px; max-width:400px; position:relative;
+      animation:slideDown 0.5s ease;
+    }
+    @keyframes slideDown { from{transform:translateY(-30px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+    .modal-content h3 { margin-bottom:15px; text-align:center; }
+    .modal-content input, .modal-content select {
+      width:100%; padding:10px; margin:10px 0; border-radius:6px; border:1px solid #ccc;
+    }
+    .modal-content button {
+      width:100%; padding:12px; background:#067bc2; color:white; border:none; border-radius:6px; font-size:16px;
+    }
+    .modal-content button:hover { background:#134fc9; cursor:pointer; }
+    .close { position:absolute; top:10px; right:15px; font-size:18px; cursor:pointer; }
+    .toggle-link { display:block; margin-top:10px; text-align:center; color:#067bc2; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="logo">CARELYTICS - Personalized Health & Wellness Advisor</div>
+    <div class="nav-links">
+      <a onclick="openModal()">Login / Signup</a>
+    </div>
+  </div>
+
+  <section class="hero">
+    <h1>Health. Powered by CARELYTICS.</h1>
+    <p>"AI That Understands Your Health."</p>
+    <p>Supporting better health outcomes with intelligent technology.</p>
+  </section>
+
+  <!-- Login/Signup Modal -->
+  <div id="authModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h3 id="modalTitle">Login to CARELYTICS</h3>
+
+      <div id="signupFields" style="display:none;">
+        <input type="text" id="name" placeholder="Name">
+        <input type="number" id="age" placeholder="Age" min="0">
+        <select id="sex">
+          <option value="">Select Sex</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Password">
+
+      <button id="authBtn" onclick="authUser()">Login</button>
+      <span class="toggle-link" onclick="toggleMode()">Don't have an account? Signup</span>
+    </div>
+  </div>
+
+  <script>
+    window.onload = () => {
+      document.body.classList.add('fade-in');
+    };
+
+    const modal = document.getElementById('authModal');
+    const signupFields = document.getElementById('signupFields');
+    const modalTitle = document.getElementById('modalTitle');
+    const authBtn = document.getElementById('authBtn');
+    const toggleLink = document.querySelector('.toggle-link');
+    let isSignup = false;
+
+    function openModal() { modal.style.display = 'block'; prefillLogin(); }
+    function closeModal() { modal.style.display = 'none'; }
+    window.onclick = e => { if (e.target == modal) closeModal(); }
+
+    function toggleMode() {
+      isSignup = !isSignup;
+      if(isSignup){
+        signupFields.style.display = 'block';
+        modalTitle.textContent = 'Signup for CARELYTICS';
+        authBtn.textContent = 'Signup';
+        toggleLink.textContent = 'Already have an account? Login';
+      } else {
+        signupFields.style.display = 'none';
+        modalTitle.textContent = 'Login to CARELYTICS';
+        authBtn.textContent = 'Login';
+        toggleLink.textContent = "Don't have an account? Signup";
+      }
+    }
+
+    function authUser() {
+      const name = document.getElementById('name').value.trim();
+      const age = document.getElementById('age').value.trim();
+      const sex = document.getElementById('sex').value;
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      if(isSignup){
+        if(!name || !age || !sex || !email || !password){
+          alert('⚠️ Please fill all fields to signup');
+          return;
+        }
+        localStorage.setItem('profile', JSON.stringify({name, age, sex, email, password}));
+        alert('✅ Signup successful! You can now login.');
+        toggleMode(); // switch to login
+      } else {
+        const profile = JSON.parse(localStorage.getItem('profile'));
+        if(profile && profile.email === email && profile.password === password){
+          localStorage.setItem('loggedInUser', email);
+          document.body.style.opacity = '0';
+          setTimeout(() => { window.location.href = 'main.html'; }, 600);
+        } else {
+          alert('⚠️ Invalid email or password');
+        }
+      }
+    }
+
+    function prefillLogin(){
+      const profile = JSON.parse(localStorage.getItem('profile'));
+      if(profile){
+        document.getElementById('email').value = profile.email;
+        document.getElementById('password').value = profile.password;
+      }
+    }
+  </script>
+</body>
+</html>

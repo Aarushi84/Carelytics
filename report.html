@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CARELYTICS – Health Report</title>
+  <style>
+    body { font-family:'Inter',sans-serif; background:#f9f9ff; margin:0; padding:20px; }
+    h1 { text-align:center; color:#28a745; margin-bottom:20px; }
+    .card { background:white; padding:20px; border-radius:12px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.1); margin:20px auto; max-width:800px; }
+    .metric { margin:10px 0; padding:10px; background:#f1faff; border-radius:8px; }
+    .metric.good { border-left:5px solid #28a745; }
+    .metric.bad { border-left:5px solid #dc3545; }
+    .ai-suggestions { margin-top:20px; padding:15px; background:#e8ffe8; border-left:5px solid #28a745; border-radius:8px; }
+  </style>
+</head>
+<body>
+  <h1>📈 Personalized Health Report</h1>
+
+  <div class="card" id="reportCard">
+    Loading report...
+  </div>
+
+  <div class="ai-suggestions" id="aiSuggestions">
+    <h3>🤖 AI Recommendations</h3>
+    <p>Loading suggestions...</p>
+  </div>
+
+<script>
+function loadReport(){
+  let records = JSON.parse(localStorage.getItem("healthRecords")) || [];
+  if(records.length < 1){
+    document.getElementById("reportCard").innerHTML = "⚠️ No records found. Please save an entry.";
+    return;
+  }
+
+  let curr = records[records.length-1];
+
+  // Ideal ranges
+  const ideal = { sleep:8, weight:70, sugar:100, bp:"120/80" };
+
+  let reportHTML = `
+    <div class="metric ${curr.sleep>=7 && curr.sleep<=9?"good":"bad"}">🛌 Sleep: ${curr.sleep}h (Ideal 7-9h)</div>
+    <div class="metric ${curr.weight>=55 && curr.weight<=80?"good":"bad"}">⚖ Weight: ${curr.weight}kg (Ideal 55-80kg)</div>
+    <div class="metric ${curr.sugar<=110?"good":"bad"}">🍬 Sugar: ${curr.sugar} mg/dL (Ideal <110)</div>
+    <div class="metric ${curr.bp==="120/80"?"good":"bad"}">❤️ BP: ${curr.bp} (Ideal 120/80)</div>
+  `;
+  document.getElementById("reportCard").innerHTML = reportHTML;
+
+  // Ask AI for recommendations
+  fetch("http://localhost:3000/chat", {
+    method:"POST", headers:{ "Content-Type":"application/json"},
+    body:JSON.stringify({ message:`Current record: ${JSON.stringify(curr)}. Compare with ideal values and give detailed health recommendations.` })
+  })
+  .then(r=>r.json()).then(d=>{
+    document.getElementById("aiSuggestions").innerHTML =
+      "<h3>🤖 AI Recommendations</h3><p>"+d.reply.replace(/\n/g,"<br>")+"</p>";
+  });
+}
+window.onload = loadReport;
+</script>
+</body>
+</html>

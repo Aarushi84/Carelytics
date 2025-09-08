@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CARELYTICS – Compare Records</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+    body { background:#f4f9ff; padding:20px; }
+    h1 { text-align:center; margin-bottom:20px; color:#067bc2; }
+
+    .compare-card {
+      max-width:800px; margin:0 auto; background:white; padding:20px;
+      border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    }
+    .compare-card h2 { margin-bottom:15px; color:#333; }
+    select, button {
+      padding:10px; margin:10px 5px; border-radius:8px; border:1px solid #ccc; font-size:15px;
+    }
+    .btn-compare {
+      background:#067bc2; color:white; border:none; cursor:pointer; padding:12px 18px;
+    }
+    .btn-compare:hover { background:#055a92; }
+    .result { margin-top:20px; padding:15px; background:#e8f5e9; border-radius:8px; }
+    .ai-suggestion { margin-top:20px; padding:15px; background:#fff8e1; border-radius:8px; }
+  </style>
+</head>
+<body>
+  <h1>📊 Health Comparison</h1>
+
+  <div class="compare-card">
+    <h2>Select Records to Compare</h2>
+    <select id="record1"></select>
+    <select id="record2"></select>
+    <button class="btn-compare" onclick="compareRecords()">🔍 Compare</button>
+
+    <div id="comparisonResult" class="result" style="display:none;"></div>
+    <canvas id="compareChart" style="margin-top:20px;max-height:400px;"></canvas>
+    <div id="aiSuggestion" class="ai-suggestion" style="display:none;"></div>
+  </div>
+
+<script>
+let records = JSON.parse(localStorage.getItem("healthRecords")) || [];
+
+// 🟢 Populate dropdowns
+function loadDropdowns(){
+  const r1 = document.getElementById("record1");
+  const r2 = document.getElementById("record2");
+  r1.innerHTML = "";
+  r2.innerHTML = "";
+
+  if(records.length < 2){
+    r1.innerHTML = "<option>No records available</option>";
+    r2.innerHTML = "<option>No records available</option>";
+    return;
+  }
+
+  records.forEach((rec, index) => {
+    let label = `${rec.timestamp} | BP: ${rec.bp || "—"}, Sugar: ${rec.sugar || "—"}, Wt: ${rec.weight || "—"}kg`;
+    let opt1 = new Option(label, index);
+    let opt2 = new Option(label, index);
+    r1.add(opt1);
+    r2.add(opt2);
+  });
+
+  r1.selectedIndex = 0;
+  r2.selectedIndex = records.length-1;
+}
+
+let chartInstance = null;
+
+function compareRecords(){
+  const idx1 = document.getElementById("record1").value;
+  const idx2 = document.getElementById("record2").value;
+  if(idx1 === "" || idx2 === "" || idx1 === idx2){
+    alert("⚠️ Please select two different records to compare.");
+    return;
+  }
+
+  const rec1 = records[idx1];
+  const rec2 = records[idx2];
+
+  // Show comparison text
+  const resultDiv = document.getElementById("comparisonResult");
+  resultDiv.style.display = "block";
+  resultDiv.innerHTML = `
+    <h3>🆚 Comparing Records</h3>
+    <p><b>Previous (${rec1.timestamp}):</b> BP ${rec1.bp}, Sugar ${rec1.sugar}, Weight ${rec1.weight}kg, Sleep ${rec1.sleep} hrs</p>
+    <p><b>Current (${rec2.timestamp}):</b> BP ${rec2.bp}, Sugar ${rec2.sugar}, Weight ${rec2.weight}kg, Sleep ${rec2.sleep} hrs</p>
+  `;
+
+  // Chart
+  const ctx = document.getElementById("compareChart").getContext("2d");
+  if(chartInstance){ chartInstance.destroy(); }
+  chartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Blood Pressure', 'Sugar', 'Weight', 'Sleep'],
+      datasets: [
+        { label: 'Previous', data: [rec1.bp||0, rec1.sugar||0, rec1.weight||0, rec1.sleep||0], backgroundColor:'#ff9800' },
+        { label: 'Current', data: [rec2.bp||0, rec2.sugar||0, rec2.weight||0, rec2.sleep||0], backgroundColor:'#067bc2' }
+      ]
+    },
+    options: { responsive:true, scales:{ y:{ beginAtZero:true } } }
+  });
+
+  // AI suggestion (replace with your API call)
+  const suggestionDiv = document.getElementById("aiSuggestion");
+  suggestionDiv.style.display = "block";
+  suggestionDiv.innerHTML = `
+    <h3>🤖 AI Health Suggestion</h3>
+    <ul>
+      <li>📈 Your BP moved from <b>${rec1.bp}</b> to <b>${rec2.bp}</b>. ${
+        rec2.bp > rec1.bp ? "Keep monitoring regularly, consider stress management." : "Great improvement in BP control!"
+      }</li>
+      <li>🍬 Sugar changed from <b>${rec1.sugar}</b> to <b>${rec2.sugar}</b>. ${
+        rec2.sugar > rec1.sugar ? "Try reducing refined carbs and sugar intake." : "Good job keeping sugar levels lower!"
+      }</li>
+      <li>⚖️ Weight changed from <b>${rec1.weight}kg</b> to <b>${rec2.weight}kg</b>. ${
+        rec2.weight > rec1.weight ? "You may need to adjust calorie intake." : "Nice progress towards your fitness goal!"
+      }</li>
+      <li>💤 Sleep went from <b>${rec1.sleep} hrs</b> to <b>${rec2.sleep} hrs</b>. ${
+        rec2.sleep >= rec1.sleep ? "Better sleep supports recovery & immunity." : "Try to improve consistency in your sleep schedule."
+      }</li>
+    </ul>
+  `;
+}
+
+window.onload = loadDropdowns;
+</script>
+</body>
+</html>
